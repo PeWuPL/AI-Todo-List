@@ -19,11 +19,64 @@ body {
   max-width: 860px;
 }
 
+.todo-header {
+  text-align: center;
+}
+
 .todo-card {
   overflow: hidden;
   background-color: #fff;
   border-radius: 1rem;
   box-shadow: 0 1rem 2.5rem rgba(29, 52, 82, 0.12);
+}
+
+.todo-card.is-draggable {
+  position: fixed;
+  z-index: 1050;
+  display: flex;
+  width: min(860px, calc(100vw - 1rem));
+  max-height: calc(100vh - 1rem);
+  flex-direction: column;
+}
+
+.todo-card.is-draggable .card-body {
+  overflow-y: auto;
+}
+
+.todo-drag-handle {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 0;
+  border-bottom: 1px solid #d5dfeb;
+  background-color: #eaf1fa;
+  color: #334863;
+  cursor: grab;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  touch-action: none;
+  user-select: none;
+}
+
+.todo-drag-handle:active {
+  cursor: grabbing;
+}
+
+.todo-drag-handle:focus-visible {
+  outline: 3px solid #2766c5;
+  outline-offset: -3px;
+}
+
+.drag-grip {
+  width: 1.5rem;
+  height: 0.75rem;
+  background-image: radial-gradient(circle, #526b89 1.5px, transparent 1.7px);
+  background-position: 0 0;
+  background-size: 0.5rem 0.4rem;
 }
 
 .form-control {

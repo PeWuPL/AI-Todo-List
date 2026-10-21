@@ -14,8 +14,11 @@ class Todo {
         this.deleteSelectedButton = document.querySelector("#delete-selected");
         this.selectedCount = document.querySelector("#selected-count");
         this.selectAllCheckbox = document.querySelector("#select-all");
+        this.todoCard = document.querySelector(".todo-card");
+        this.dragHandle = document.querySelector(".todo-drag-handle");
 
         this.bindEvents();
+        this.initializeDragging();
         this.render();
     }
 
@@ -50,6 +53,53 @@ class Todo {
     }
 
     bindEvents() {
+        let dragStart = null;
+        this.dragHandle.addEventListener("pointerdown", event => {
+            if (event.button !== 0) {
+                return;
+            }
+            const rect = this.todoCard.getBoundingClientRect();
+            dragStart = {
+                pointerX: event.clientX,
+                pointerY: event.clientY,
+                left: rect.left,
+                top: rect.top
+            };
+            this.dragHandle.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+
+        this.dragHandle.addEventListener("pointermove", event => {
+            if (!dragStart) {
+                return;
+            }
+            this.positionCard(
+                dragStart.left + event.clientX - dragStart.pointerX,
+                dragStart.top + event.clientY - dragStart.pointerY
+            );
+        });
+
+        const stopDragging = () => {
+            dragStart = null;
+        };
+        this.dragHandle.addEventListener("pointerup", stopDragging);
+        this.dragHandle.addEventListener("pointercancel", stopDragging);
+        this.dragHandle.addEventListener("lostpointercapture", stopDragging);
+        this.dragHandle.addEventListener("keydown", event => {
+            const offsets = {
+                ArrowUp: [0, -10],
+                ArrowDown: [0, 10],
+                ArrowLeft: [-10, 0],
+                ArrowRight: [10, 0]
+            };
+            const offset = offsets[event.key];
+            if (offset) {
+                event.preventDefault();
+                const rect = this.todoCard.getBoundingClientRect();
+                this.positionCard(rect.left + offset[0], rect.top + offset[1]);
+            }
+        });
+
         this.searchInput.addEventListener("input", () => {
             this.searchTerm = this.searchInput.value.trim();
             this.render();
@@ -128,6 +178,22 @@ class Todo {
             }
             this.render();
         });
+    }
+
+    initializeDragging() {
+        const rect = this.todoCard.getBoundingClientRect();
+        this.todoCard.classList.add("is-draggable");
+        this.todoCard.style.left = `${rect.left}px`;
+        this.todoCard.style.top = `${rect.top}px`;
+    }
+
+    positionCard(left, top) {
+        const rect = this.todoCard.getBoundingClientRect();
+        const margin = 8;
+        const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+        const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
+        this.todoCard.style.left = `${Math.min(Math.max(left, margin), maxLeft)}px`;
+        this.todoCard.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
 
     visibleTasks() {

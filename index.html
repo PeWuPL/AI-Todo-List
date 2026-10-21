@@ -13,13 +13,18 @@
 <body>
 <main class="container py-5">
     <section class="todo-app mx-auto" aria-labelledby="page-title">
-        <header class="mb-4">
+        <header class="todo-header mb-4">
             <p class="text-uppercase text-primary fw-semibold small mb-2">Stay on top of things</p>
             <h1 id="page-title" class="display-5 fw-bold mb-2">To-do list</h1>
             <p class="text-secondary mb-0">A simple place to keep track of what needs doing.</p>
         </header>
 
         <div class="card todo-card border-0">
+            <button class="todo-drag-handle" type="button" aria-label="Move the to-do list"
+                    title="Drag to move the to-do list">
+                <span class="drag-grip" aria-hidden="true"></span>
+                <span>Drag to move</span>
+            </button>
             <div class="card-body p-3 p-md-4">
                 <label for="task-search" class="form-label fw-semibold">Search tasks</label>
                 <input id="task-search" class="form-control mb-4" type="search"
