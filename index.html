@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,6 +11,47 @@
     <script src="scripts.js" defer></script>
 </head>
 <body>
+<main class="container py-5">
+    <section class="todo-app mx-auto" aria-labelledby="page-title">
+        <header class="mb-4">
+            <p class="text-uppercase text-primary fw-semibold small mb-2">Stay on top of things</p>
+            <h1 id="page-title" class="display-5 fw-bold mb-2">To-do list</h1>
+            <p class="text-secondary mb-0">A simple place to keep track of what needs doing.</p>
+        </header>
 
+        <div class="card todo-card border-0">
+            <div class="card-body p-3 p-md-4">
+                <label for="task-search" class="form-label fw-semibold">Search tasks</label>
+                <input id="task-search" class="form-control mb-4" type="search"
+                       placeholder="Search by task name..." autocomplete="off">
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h5 mb-0">Your tasks</h2>
+                    <button id="delete-selected" class="btn btn-outline-danger btn-sm" type="button" disabled>
+                        Delete selected <span id="selected-count">(0)</span>
+                    </button>
+                </div>
+
+                <div class="form-check select-visible mb-2">
+                    <input id="select-all" class="form-check-input" type="checkbox" disabled>
+                    <label class="form-check-label small text-secondary" for="select-all">Select all visible tasks</label>
+                </div>
+                <ul id="task-list" class="list-group list-group-flush" aria-live="polite"></ul>
+
+                <div class="border-top mt-4 pt-4">
+                    <h2 class="h5 mb-3">Add a task</h2>
+                    <form id="new-task-form" class="new-task-form">
+                        <label for="new-task-title" class="visually-hidden">Task name</label>
+                        <input id="new-task-title" class="form-control" type="text"
+                               placeholder="What needs to be done?" maxlength="200" required>
+                        <label for="new-task-date" class="visually-hidden">Task date</label>
+                        <input id="new-task-date" class="form-control" type="date" required>
+                        <button class="btn btn-primary" type="submit">Add task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 </body>
 </html>

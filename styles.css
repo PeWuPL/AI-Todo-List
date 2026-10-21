@@ -1,3 +1,126 @@
 body {
-  background-color: #f3fff3;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 8% 4%, rgba(129, 190, 255, 0.2), transparent 34rem),
+    radial-gradient(ellipse at 96% 92%, rgba(108, 202, 172, 0.2), transparent 32rem),
+    #edf3fa;
+  color: #17263b;
+}
+
+.text-secondary {
+  color: #526277 !important;
+}
+
+.text-primary {
+  color: #174ea6 !important;
+}
+
+.todo-app {
+  max-width: 860px;
+}
+
+.todo-card {
+  overflow: hidden;
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2.5rem rgba(29, 52, 82, 0.12);
+}
+
+.form-control {
+  color: #17263b;
+  border-color: #aab8c9;
+}
+
+.form-control::placeholder {
+  color: #66758a;
+  opacity: 1;
+}
+
+.form-control:focus {
+  border-color: #2766c5;
+  box-shadow: 0 0 0 0.2rem rgba(39, 102, 197, 0.2);
+}
+
+.btn-primary {
+  --bs-btn-bg: #174ea6;
+  --bs-btn-border-color: #174ea6;
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: #123d83;
+  --bs-btn-hover-border-color: #123d83;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: #103673;
+  --bs-btn-active-border-color: #103673;
+  --bs-btn-active-color: #fff;
+}
+
+.task-row {
+  min-width: 0;
+  border-color: #e0e7ef;
+  background-color: transparent;
+}
+
+.task-row:hover {
+  background-color: #f5f8fc;
+}
+
+.select-visible {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.select-visible .form-check-input {
+  float: none;
+  margin: 0;
+}
+
+.task-checkbox {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.task-content {
+  min-width: 0;
+}
+
+.task-name {
+  color: #17263b;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.task-name:hover {
+  color: #174ea6;
+}
+
+.task-date {
+  font-variant-numeric: tabular-nums;
+}
+
+.task-edit-input {
+  min-width: 12rem;
+}
+
+.new-task-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 190px) auto;
+  gap: 0.5rem;
+}
+
+mark {
+  color: #4a3100;
+  background-color: #ffe08a;
+  border-radius: 0.15rem;
+  padding: 0 0.1em;
+}
+
+@media (max-width: 575.98px) {
+  .new-task-form {
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 0.8fr);
+  }
+
+  .new-task-form button {
+    grid-column: 1 / -1;
+  }
 }
