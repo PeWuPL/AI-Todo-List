@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="styles.css" type="text/css">
     <script src="js/bootstrap.bundle.min.js" defer></script>
-    <script src="scripts.js" defer></script>
+    <script src="scripts.js" type="module"></script>
 </head>
 <body>
 <main class="container py-5">
@@ -30,16 +30,8 @@
                 <input id="task-search" class="form-control mb-4" type="search"
                        placeholder="Search by task name..." autocomplete="off">
 
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <h2 class="h5 mb-0">Your tasks</h2>
-                    <button id="delete-selected" class="btn btn-outline-danger btn-sm" type="button" disabled>
-                        Delete selected <span id="selected-count">(0)</span>
-                    </button>
-                </div>
-
-                <div class="form-check select-visible mb-2">
-                    <input id="select-all" class="form-check-input" type="checkbox" disabled>
-                    <label class="form-check-label small text-secondary" for="select-all">Select all visible tasks</label>
                 </div>
                 <ul id="task-list" class="list-group list-group-flush" aria-live="polite"></ul>
 
@@ -48,9 +40,9 @@
                     <form id="new-task-form" class="new-task-form">
                         <label for="new-task-title" class="visually-hidden">Task name</label>
                         <input id="new-task-title" class="form-control" type="text"
-                               placeholder="What needs to be done?" maxlength="200" required>
+                               placeholder="What needs to be done?" minlength="3" maxlength="255" required>
                         <label for="new-task-date" class="visually-hidden">Task date</label>
-                        <input id="new-task-date" class="form-control" type="date" required>
+                        <input id="new-task-date" class="form-control" type="date">
                         <button class="btn btn-primary" type="submit">Add task</button>
                     </form>
                 </div>

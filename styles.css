@@ -35,12 +35,24 @@ body {
   z-index: 1050;
   display: flex;
   width: min(860px, calc(100vw - 1rem));
+  height: min(780px, calc(100vh - 1rem));
   max-height: calc(100vh - 1rem);
   flex-direction: column;
 }
 
 .todo-card.is-draggable .card-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#task-list {
+  min-height: 0;
+  flex: 1 1 auto;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .todo-drag-handle {
@@ -110,21 +122,11 @@ body {
   min-width: 0;
   border-color: #e0e7ef;
   background-color: transparent;
+  cursor: pointer;
 }
 
 .task-row:hover {
   background-color: #f5f8fc;
-}
-
-.select-visible {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.select-visible .form-check-input {
-  float: none;
-  margin: 0;
 }
 
 .task-checkbox {
@@ -147,12 +149,22 @@ body {
   color: #174ea6;
 }
 
+.task-name.task-done {
+  color: #526277;
+  text-decoration: line-through !important;
+}
+
 .task-date {
   font-variant-numeric: tabular-nums;
 }
 
 .task-edit-input {
   min-width: 12rem;
+  flex: 1 1 12rem;
+}
+
+.task-edit-date {
+  flex: 0 1 10rem;
 }
 
 .new-task-form {
@@ -161,11 +173,11 @@ body {
   gap: 0.5rem;
 }
 
-mark {
+.task-name mark {
+  --bs-mark-padding: 0;
   color: #4a3100;
   background-color: #ffe08a;
-  border-radius: 0.15rem;
-  padding: 0 0.1em;
+  padding: 0;
 }
 
 @media (max-width: 575.98px) {

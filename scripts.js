@@ -1,8 +1,108 @@
-class Todo {
+class Window {
+    constructor(element, dragHandle) {
+        this.element = element;
+        this.dragHandle = dragHandle;
+        this.initializeDragging();
+        this.bindDragEvents();
+    }
+
+    bindDragEvents() {
+        let dragStart = null;
+        this.dragHandle.addEventListener("pointerdown", event => {
+            if (event.button !== 0) {
+                return;
+            }
+            const rect = this.element.getBoundingClientRect();
+            dragStart = {
+                pointerX: event.clientX,
+                pointerY: event.clientY,
+                left: rect.left,
+                top: rect.top
+            };
+            this.dragHandle.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+
+        this.dragHandle.addEventListener("pointermove", event => {
+            if (!dragStart) {
+                return;
+            }
+            this.position(
+                dragStart.left + event.clientX - dragStart.pointerX,
+                dragStart.top + event.clientY - dragStart.pointerY
+            );
+        });
+
+        const stopDragging = () => {
+            dragStart = null;
+        };
+        this.dragHandle.addEventListener("pointerup", stopDragging);
+        this.dragHandle.addEventListener("pointercancel", stopDragging);
+        this.dragHandle.addEventListener("lostpointercapture", stopDragging);
+        this.dragHandle.addEventListener("keydown", event => {
+            const offsets = {
+                ArrowUp: [0, -10],
+                ArrowDown: [0, 10],
+                ArrowLeft: [-10, 0],
+                ArrowRight: [10, 0]
+            };
+            const offset = offsets[event.key];
+            if (offset) {
+                event.preventDefault();
+                const rect = this.element.getBoundingClientRect();
+                this.position(rect.left + offset[0], rect.top + offset[1]);
+            }
+        });
+    }
+
+    initializeDragging() {
+        const rect = this.element.getBoundingClientRect();
+        this.element.classList.add("is-draggable");
+        this.position(rect.left, rect.top);
+    }
+
+    position(left, top) {
+        const rect = this.element.getBoundingClientRect();
+        const margin = 8;
+        const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+        const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
+        this.element.style.left = `${Math.min(Math.max(left, margin), maxLeft)}px`;
+        this.element.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
+    }
+}
+
+function todayAsISODate() {
+    const today = new Date();
+    return [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+    ].join("-");
+}
+
+function isValidTaskDate(date) {
+    if (!date) {
+        return true;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < todayAsISODate()) {
+        return false;
+    }
+
+    const [year, month, day] = date.split("-").map(Number);
+    const parsedDate = new Date(Date.UTC(year, month - 1, day));
+    return parsedDate.getUTCFullYear() === year &&
+        parsedDate.getUTCMonth() === month - 1 &&
+        parsedDate.getUTCDate() === day;
+}
+
+class Todo extends Window {
     constructor() {
+        const todoCard = document.querySelector(".todo-card");
+        const dragHandle = document.querySelector(".todo-drag-handle");
+        super(todoCard, dragHandle);
+
         this.storageKey = "todo-tasks";
         this.tasks = this.loadTasks();
-        this.selectedIds = new Set();
         this.searchTerm = "";
         this.editingId = null;
 
@@ -11,14 +111,8 @@ class Todo {
         this.newTaskForm = document.querySelector("#new-task-form");
         this.newTaskTitle = document.querySelector("#new-task-title");
         this.newTaskDate = document.querySelector("#new-task-date");
-        this.deleteSelectedButton = document.querySelector("#delete-selected");
-        this.selectedCount = document.querySelector("#selected-count");
-        this.selectAllCheckbox = document.querySelector("#select-all");
-        this.todoCard = document.querySelector(".todo-card");
-        this.dragHandle = document.querySelector(".todo-drag-handle");
-
+        this.newTaskDate.min = todayAsISODate();
         this.bindEvents();
-        this.initializeDragging();
         this.render();
     }
 
@@ -49,68 +143,27 @@ class Todo {
             typeof task.id === "string" &&
             typeof task.title === "string" &&
             typeof task.date === "string"
-        );
+        ).map(task => ({ ...task, done: task.done === true }));
     }
 
     bindEvents() {
-        let dragStart = null;
-        this.dragHandle.addEventListener("pointerdown", event => {
-            if (event.button !== 0) {
-                return;
-            }
-            const rect = this.todoCard.getBoundingClientRect();
-            dragStart = {
-                pointerX: event.clientX,
-                pointerY: event.clientY,
-                left: rect.left,
-                top: rect.top
-            };
-            this.dragHandle.setPointerCapture(event.pointerId);
-            event.preventDefault();
-        });
-
-        this.dragHandle.addEventListener("pointermove", event => {
-            if (!dragStart) {
-                return;
-            }
-            this.positionCard(
-                dragStart.left + event.clientX - dragStart.pointerX,
-                dragStart.top + event.clientY - dragStart.pointerY
-            );
-        });
-
-        const stopDragging = () => {
-            dragStart = null;
-        };
-        this.dragHandle.addEventListener("pointerup", stopDragging);
-        this.dragHandle.addEventListener("pointercancel", stopDragging);
-        this.dragHandle.addEventListener("lostpointercapture", stopDragging);
-        this.dragHandle.addEventListener("keydown", event => {
-            const offsets = {
-                ArrowUp: [0, -10],
-                ArrowDown: [0, 10],
-                ArrowLeft: [-10, 0],
-                ArrowRight: [10, 0]
-            };
-            const offset = offsets[event.key];
-            if (offset) {
-                event.preventDefault();
-                const rect = this.todoCard.getBoundingClientRect();
-                this.positionCard(rect.left + offset[0], rect.top + offset[1]);
-            }
-        });
-
         this.searchInput.addEventListener("input", () => {
-            this.searchTerm = this.searchInput.value.trim();
+            const query = this.searchInput.value.trim();
+            this.searchTerm = query.length >= 2 ? query : "";
             this.render();
         });
 
         this.newTaskForm.addEventListener("submit", event => {
             event.preventDefault();
             const title = this.newTaskTitle.value.trim();
-            if (!title) {
-                this.newTaskTitle.setCustomValidity("Enter a task name.");
+            if (title.length < 3 || title.length > 255) {
+                this.newTaskTitle.setCustomValidity("Task name must be between 3 and 255 characters.");
                 this.newTaskTitle.reportValidity();
+                return;
+            }
+            if (!isValidTaskDate(this.newTaskDate.value)) {
+                this.newTaskDate.setCustomValidity("Choose today or a future date, or leave the date empty.");
+                this.newTaskDate.reportValidity();
                 return;
             }
 
@@ -120,20 +173,21 @@ class Todo {
         });
 
         this.newTaskTitle.addEventListener("input", () => this.newTaskTitle.setCustomValidity(""));
+        this.newTaskDate.addEventListener("input", () => this.newTaskDate.setCustomValidity(""));
 
         this.taskList.addEventListener("change", event => {
-            if (event.target.matches("[data-task-checkbox]")) {
-                const { taskId } = event.target.dataset;
-                if (event.target.checked) {
-                    this.selectedIds.add(taskId);
-                } else {
-                    this.selectedIds.delete(taskId);
-                }
-                this.updateSelectionControls();
+            if (event.target.matches("[data-task-done]")) {
+                this.setTaskDone(event.target.dataset.taskId, event.target.checked);
             }
         });
 
         this.taskList.addEventListener("click", event => {
+            const taskName = event.target.closest("[data-task-name]");
+            if (taskName) {
+                this.startEdit(taskName.dataset.taskId);
+                return;
+            }
+
             const actionButton = event.target.closest("[data-action]");
             if (actionButton) {
                 const { action, taskId } = actionButton.dataset;
@@ -147,14 +201,19 @@ class Todo {
                 return;
             }
 
-            const taskName = event.target.closest("[data-task-name]");
-            if (taskName) {
-                this.startEdit(taskName.dataset.taskId);
+            if (event.target.closest("[data-task-done], [data-edit-field]")) {
+                return;
+            }
+
+            const row = event.target.closest(".task-row");
+            if (row) {
+                const checkbox = row.querySelector("[data-task-done]");
+                this.setTaskDone(checkbox.dataset.taskId, !checkbox.checked);
             }
         });
 
         this.taskList.addEventListener("keydown", event => {
-            if (!event.target.matches("[data-edit-input]")) {
+            if (!event.target.matches("[data-edit-field]")) {
                 return;
             }
             if (event.key === "Enter") {
@@ -165,35 +224,6 @@ class Todo {
             }
         });
 
-        this.deleteSelectedButton.addEventListener("click", () => {
-            this.deleteTasks(this.selectedIds);
-        });
-
-        this.selectAllCheckbox.addEventListener("change", () => {
-            const visibleIds = this.visibleTasks().map(task => task.id);
-            if (this.selectAllCheckbox.checked) {
-                visibleIds.forEach(id => this.selectedIds.add(id));
-            } else {
-                visibleIds.forEach(id => this.selectedIds.delete(id));
-            }
-            this.render();
-        });
-    }
-
-    initializeDragging() {
-        const rect = this.todoCard.getBoundingClientRect();
-        this.todoCard.classList.add("is-draggable");
-        this.todoCard.style.left = `${rect.left}px`;
-        this.todoCard.style.top = `${rect.top}px`;
-    }
-
-    positionCard(left, top) {
-        const rect = this.todoCard.getBoundingClientRect();
-        const margin = 8;
-        const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
-        const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
-        this.todoCard.style.left = `${Math.min(Math.max(left, margin), maxLeft)}px`;
-        this.todoCard.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
 
     visibleTasks() {
@@ -219,7 +249,6 @@ class Todo {
             tasks.forEach(task => this.taskList.append(this.createTaskRow(task)));
         }
 
-        this.updateSelectionControls();
     }
 
     createTaskRow(task) {
@@ -229,10 +258,10 @@ class Todo {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.className = "form-check-input task-checkbox flex-shrink-0";
-        checkbox.checked = this.selectedIds.has(task.id);
-        checkbox.dataset.taskCheckbox = "";
+        checkbox.checked = task.done;
+        checkbox.dataset.taskDone = "";
         checkbox.dataset.taskId = task.id;
-        checkbox.setAttribute("aria-label", `Select ${task.title}`);
+        checkbox.setAttribute("aria-label", `Mark ${task.title} as done`);
         item.append(checkbox);
 
         const content = document.createElement("div");
@@ -246,14 +275,22 @@ class Todo {
             name.dataset.taskName = "";
             name.dataset.taskId = task.id;
             name.setAttribute("aria-label", `Edit task: ${task.title}`);
-            this.appendHighlightedText(name, task.title);
+            const taskText = document.createElement("span");
+            taskText.className = "task-name-text";
+            this.appendHighlightedText(taskText, task.title);
+            name.append(taskText);
+            if (task.done) {
+                name.classList.add("task-done");
+            }
             content.append(name);
 
-            const date = document.createElement("time");
-            date.className = "task-date d-block small text-secondary mt-1";
-            date.dateTime = task.date;
-            date.textContent = task.date;
-            content.append(date);
+            if (task.date) {
+                const date = document.createElement("time");
+                date.className = "task-date d-block small text-secondary mt-1";
+                date.dateTime = task.date;
+                date.textContent = task.date;
+                content.append(date);
+            }
         }
         item.append(content);
 
@@ -277,13 +314,25 @@ class Todo {
         input.type = "text";
         input.className = "form-control form-control-sm task-edit-input flex-grow-1";
         input.value = task.title;
-        input.maxLength = 200;
+        input.minLength = 3;
+        input.maxLength = 255;
         input.required = true;
-        input.dataset.editInput = "";
+        input.dataset.editField = "";
         input.dataset.taskId = task.id;
         input.setAttribute("aria-label", "Edit task name");
         input.addEventListener("input", () => input.setCustomValidity(""));
         editor.append(input);
+
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.className = "form-control form-control-sm task-edit-date";
+        dateInput.value = task.date;
+        dateInput.min = todayAsISODate();
+        dateInput.dataset.editField = "";
+        dateInput.dataset.taskId = task.id;
+        dateInput.setAttribute("aria-label", "Edit task date");
+        dateInput.addEventListener("input", () => dateInput.setCustomValidity(""));
+        editor.append(dateInput);
 
         const saveButton = document.createElement("button");
         saveButton.type = "button";
@@ -331,34 +380,56 @@ class Todo {
         this.render();
     }
 
+    setTaskDone(taskId, done) {
+        const task = this.tasks.find(item => item.id === taskId);
+        if (!task) {
+            throw new Error(`Cannot find task: ${taskId}`);
+        }
+        task.done = done;
+        this.persist();
+        this.render();
+    }
+
     addTask(title, date) {
         const normalizedTitle = title.trim();
-        if (!normalizedTitle) {
-            throw new Error("Task title cannot be empty.");
+        const normalizedDate = date || "";
+        if (normalizedTitle.length < 3 || normalizedTitle.length > 255) {
+            throw new Error("Task title must be between 3 and 255 characters.");
         }
-        if (!date) {
-            throw new Error("Task date is required.");
+        if (!isValidTaskDate(normalizedDate)) {
+            throw new Error("Task date must be today, a future date, or empty.");
         }
 
         this.tasks.push({
             id: crypto.randomUUID(),
             title: normalizedTitle,
-            date
+            date: normalizedDate,
+            done: false
         });
         this.persist();
         this.render();
     }
 
     saveEdit(taskId) {
-        const input = Array.from(this.taskList.querySelectorAll("[data-edit-input]"))
-            .find(editInput => editInput.dataset.taskId === taskId);
+        const fields = Array.from(this.taskList.querySelectorAll("[data-edit-field]"))
+            .filter(field => field.dataset.taskId === taskId);
+        const input = fields.find(field => field.type === "text");
+        const dateInput = fields.find(field => field.type === "date");
         if (!input) {
             throw new Error(`Cannot find editor for task: ${taskId}`);
         }
         const title = input.value.trim();
-        if (!title) {
-            input.setCustomValidity("Task name cannot be empty.");
+        if (title.length < 3 || title.length > 255) {
+            input.setCustomValidity("Task name must be between 3 and 255 characters.");
             input.reportValidity();
+            return;
+        }
+        if (!dateInput) {
+            throw new Error(`Cannot find date editor for task: ${taskId}`);
+        }
+        if (!isValidTaskDate(dateInput.value)) {
+            dateInput.setCustomValidity("Choose today or a future date, or leave the date empty.");
+            dateInput.reportValidity();
             return;
         }
 
@@ -367,6 +438,7 @@ class Todo {
             throw new Error(`Cannot edit missing task: ${taskId}`);
         }
         task.title = title;
+        task.date = dateInput.value;
         this.editingId = null;
         this.persist();
         this.render();
@@ -380,23 +452,11 @@ class Todo {
     deleteTasks(ids) {
         const idsToDelete = new Set(ids);
         this.tasks = this.tasks.filter(task => !idsToDelete.has(task.id));
-        idsToDelete.forEach(id => this.selectedIds.delete(id));
         if (idsToDelete.has(this.editingId)) {
             this.editingId = null;
         }
         this.persist();
         this.render();
-    }
-
-    updateSelectionControls() {
-        const visibleIds = this.visibleTasks().map(task => task.id);
-        const selectedVisibleCount = visibleIds.filter(id => this.selectedIds.has(id)).length;
-        this.selectedCount.textContent = `(${this.selectedIds.size})`;
-        this.deleteSelectedButton.disabled = this.selectedIds.size === 0;
-        this.selectAllCheckbox.disabled = visibleIds.length === 0;
-        this.selectAllCheckbox.checked = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
-        this.selectAllCheckbox.indeterminate = selectedVisibleCount > 0 &&
-            selectedVisibleCount < visibleIds.length;
     }
 
     persist() {
